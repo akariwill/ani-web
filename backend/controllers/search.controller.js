@@ -116,6 +116,37 @@ export async function searchAnime(req, res) {
     }
 }
 
+export async function searchManga(req, res) {
+    const { query } = req.params;
+    try {
+
+        const response = await fetchFromJikan(`https://api.jikan.moe/v4/manga?q=${query}&limit=10`);
+
+        if(response.data.length === 0 ){
+            return res.status(404).send(null);
+        }
+
+        await User.findByIdAndUpdate(req.user._id, {
+            $push: {
+                searchHistory: {
+                    id: response.data[0].mal_id,
+                    image: response.data[0].images.jpg.image_url,
+                    title: response.data[0].title,
+                    searchType: "manga",
+                    createdAt: new Date(),
+                }
+            }
+        });
+
+        // Mengembalikan hasil pencarian manga
+        res.status(200).json({ success: true, content: response.data });
+    } catch (error) {
+        console.log("Error in getSearchManga controller: ", error.message);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+    
+}
+
 
 export async function getSearchHistory(req,res) {
     try {
