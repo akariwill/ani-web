@@ -147,6 +147,29 @@ export async function searchManga(req, res) {
     
 }
 
+export async function searchCharacters(req, res) {
+    const { query } = req.params; 
+
+    if (!query) {
+        return res.status(400).json({ success: false, message: "Query parameter is required" });
+    }
+
+    try {
+        const data = await fetchFromJikan(`https://api.jikan.moe/v4/characters?q=${encodeURIComponent(query)}`);
+
+        if (!data || !data.data || data.data.length === 0) {
+            return res.status(404).json({ success: false, message: "No characters found" });
+        }
+
+        res.status(200).json({ success: true, content: data.data });
+    } catch (error) {
+        if (error.response?.status === 404) {
+            return res.status(404).json({ success: false, message: "No characters found" });
+        }
+
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
 
 export async function getSearchHistory(req,res) {
     try {
